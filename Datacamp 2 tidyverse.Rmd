@@ -1,0 +1,152 @@
+---
+title: "Datacamp 2 Introduction to the Tidyverse"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##Data wrangling
+```{r}
+# The gapminder datasets
+library(gapminder)
+library(dplyr)
+gapminder
+
+gapminder %>% 
+  filter(year == 2007)
+
+gapminder %>% 
+  filter(year == 2007, country == "United States")
+
+gapminder %>% 
+  arrange(gdpPercap)
+#sort by variable
+
+gapminder %>% 
+  filter(year == 2007) %>% 
+  arrange(desc(gdpPercap))
+# get the highest in 2007
+
+gapminder %>% 
+  mutate(pop = pop / 1000000)
+
+gapminder %>% 
+  mutate(gdp = gdpPercap * pop)
+
+gapminder %>% 
+ mutate(gdp = gdpPercap * pop) %>%
+  filter (year == 2007) %>% 
+  arrange(desc(gdp))
+```
+
+
+#visualization with ggplot2
+```{r}
+gapminder_2007 <- gapminder %>% 
+  filter(year == 2007) 
+library(rvest)
+writexl::write_xlsx(gapminder_2007, "gapminder_2007.xlsx")
+library(ggplot2)
+
+ggplot(gapminder_2007, aes(x = gdpPercap, y = lifeExp)) + geom_point()
+
+# gapminder_2007 <- gapminder_2007 %>% 
+  mutate(logpop = log(pop))
+
+  #color, size, scale
+ggplot(gapminder_2007, aes(x = gdpPercap, y = lifeExp, color = continent, size = pop)) + geom_point() + scale_x_log10()
+
+
+#faceting
+ggplot(gapminder_2007, aes(x = gdpPercap, y = lifeExp)) + geom_point() + scale_x_log10() + facet_wrap(~continent)
+
+#facet wrap can be used with years to make things cool
+ggplot(gapminder, aes(x = gdpPercap, y = lifeExp, color = continent, size = pop)) + geom_point() + scale_x_log10() + facet_wrap(~year)
+```
+
+Summarizing and grouping
+```{r}
+#summarizing: mean median max min
+gapminder %>% 
+  filter(year == 2007) %>% 
+  summarize(meanlifeExp = mean(lifeExp), totalPop = sum(pop))
+
+gapminder%>%
+    filter(year == 1957) %>%
+    summarize(medianLifeExp = median(lifeExp), maxGdpPercap = max(gdpPercap))
+
+
+#group by 
+gapminder%>%
+    group_by(year) %>%
+  group_by(continent) %>% 
+    summarize(medianLifeExp = median(lifeExp), maxGdpPercap = max(gdpPercap))
+
+gapminder%>%
+    group_by(year, continent) %>%
+    summarize(medianLifeExp = median(lifeExp), maxGdpPercap = max(gdpPercap))
+
+#visualizing summarized data
+by_year <- gapminder%>%
+    group_by(year) %>%
+    summarize(medianLifeExp = median(lifeExp), maxGdpPercap = max(gdpPercap))
+ggplot(by_year, aes(x = year, y = medianLifeExp)) + geom_point() + expand_limits(y = 0)
+#set the start of y to be 0
+
+by_year_continent <- gapminder%>%
+    group_by(year, continent) %>%
+    summarize(medianLifeExp = median(lifeExp), maxGdpPercap = max(gdpPercap))
+
+ggplot(by_year_continent, aes(x = year, y = medianLifeExp, color = continent)) + geom_point() + expand_limits(y = 0)
+
+# Summarize the median GDP and median life expectancy per continent in 2007
+by_continent_2007 <- gapminder %>%
+    filter(year == 2007) %>%
+    group_by(continent) %>%
+    summarize(medianLifeExp = median(lifeExp), medianGdpPercap = median(gdpPercap))
+
+
+# Use a scatter plot to compare the median GDP and median life expectancy
+ggplot(by_continent_2007, aes(x = medianGdpPercap, y = medianLifeExp, color = continent)) + geom_point()
+```
+
+
+4. Types of visualization
+
+```{r}
+#line plots
+# geom_line()
+by_year_continent <- gapminder%>%
+    group_by(year, continent) %>%
+    summarize(medianLifeExp = median(lifeExp), maxGdpPercap = max(gdpPercap))
+
+ggplot(by_year_continent, aes(x = year, y = medianLifeExp, color = continent)) + geom_line() + expand_limits(y = 0)
+
+
+
+#bar plot
+# across categories like continents
+# geom_col()
+# always start at 0
+
+
+#histogram
+#distribution, value as x, count as y
+ggplot(gapminder_2007, aes(x = lifeExp)) + geom_histogram(binwidth = 5)
+
+ggplot(gapminder_2007, aes(x = lifeExp)) + geom_histogram(bins = 5)
+
+gapminder_1952 <- gapminder %>%
+  filter(year == 1952)
+
+# Create a histogram of population (pop), with x on a log scale
+ggplot(gapminder_1952, aes(x = pop)) + geom_histogram() + scale_x_log10()
+#log to reduce the skewness
+
+
+# box plots 
+ggplot(gapminder_2007, aes(x = continent, y = lifeExp)) + geom_boxplot()
+
+```
